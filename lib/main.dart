@@ -24,6 +24,7 @@ class Calculadora extends StatefulWidget {
 }
 
 class _CalculadoraState extends State<Calculadora> {
+  final myController = TextEditingController();
   final List<String> botones = [
     '1',
     '2',
@@ -60,6 +61,7 @@ class _CalculadoraState extends State<Calculadora> {
                       padding: EdgeInsets.all(20),
                       alignment: Alignment.centerRight,
                       child: TextField(
+                        controller: myController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           enabled: false,
@@ -79,7 +81,15 @@ class _CalculadoraState extends State<Calculadora> {
                   itemBuilder: (BuildContext context, int index) {
                     return Boton(
                       presionado: () {
-                        setState(() {});
+                        setState(() {
+                          //TODO funciones
+                          String valor = myController.text;
+                          if (valor.length == 0) {
+                            myController.text = botones[index];
+                          } else {
+                            myController.text = valor + botones[index];
+                          }
+                        });
                       },
                       buttonText: botones[index],
                       color: Colors.green,
