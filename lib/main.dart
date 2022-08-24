@@ -89,6 +89,7 @@ class _CalculadoraState extends State<Calculadora> {
                           } else {
                             myController.text = valor + botones[index];
                           }
+                          calcular(botones[index]);
                         });
                       },
                       buttonText: botones[index],
@@ -101,5 +102,26 @@ class _CalculadoraState extends State<Calculadora> {
         ],
       ),
     );
+  }
+
+  void calcular(String dato) {
+    if (dato == "=") {
+      String cadena = myController.text;
+      for (int i = 0; i < cadena.length; i++) {
+        //print(cadena[i] + "\n");
+        if (cadena[i] == "+" ||
+            cadena[i] == "-" ||
+            cadena[i] == "*" ||
+            cadena[i] == "/") {
+          double primerDato = 0;
+          String aux = "";
+          for (int j = 0; j < i; j++) {
+            aux += cadena[j];
+          }
+          primerDato = double.parse(aux);
+          print(primerDato);
+        }
+      }
+    }
   }
 }
