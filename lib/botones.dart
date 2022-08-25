@@ -14,9 +14,9 @@ class Boton extends StatelessWidget {
     return GestureDetector(
       onTap: presionado,
       child: Padding(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(15),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(25),
+          borderRadius: BorderRadius.circular(50),
           child: Container(
             color: color,
             child: Center(

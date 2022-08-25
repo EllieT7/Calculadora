@@ -49,134 +49,155 @@ class _CalculadoraState extends State<Calculadora> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.amber,
+        backgroundColor: Color.fromARGB(255, 98, 192, 204),
         title: const Text('Calculadora'),
       ),
-      body: Column(
-        children: <Widget>[
-          Text("$anterior"),
-          Expanded(
-            child: Container(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      alignment: Alignment.centerRight,
-                      child: SizedBox(
-                        height: 100,
-                        child: TextField(
-                          style: TextStyle(fontSize: 40.0, color: Colors.black),
-                          controller: myController,
-                          decoration: const InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 40.0),
-                            border: OutlineInputBorder(),
-                            enabled: false,
-                          ),
+      body: Column(children: <Widget>[
+        Container(
+          alignment: Alignment.topRight,
+          child: Text("$anterior"),
+          margin: EdgeInsets.only(top: 30, right: 30),
+        ),
+        Expanded(
+          child: Container(
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.all(15),
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      child: TextField(
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          fontSize: 40.0,
+                          color: Color.fromARGB(255, 99, 99, 99),
+                        ),
+                        controller: myController,
+                        decoration: const InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(vertical: 20.0),
+                          enabled: false,
                         ),
                       ),
                     ),
-                  ]),
-            ),
+                  ),
+                ]),
           ),
-          Row(
-            children: [
-              Expanded(
-                  child: GestureDetector(
-                onTap: (() => {
-                      setState(() {
-                        myController.text = "";
-                        anterior = "";
-                      })
-                    }),
-                child: Container(
-                  color: Colors.amber,
-                  height: 100,
-                  child: const Center(
-                    child: const Text(
-                      "C",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                      ),
+        ),
+        Row(
+          children: [
+            Expanded(
+                child: GestureDetector(
+              onTap: (() => {
+                    setState(() {
+                      myController.text = "";
+                      anterior = "";
+                    })
+                  }),
+              child: Container(
+                margin:
+                    EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Color.fromARGB(255, 126, 73, 143)),
+                height: 40,
+                child: const Center(
+                  child: const Text(
+                    "C",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              )),
-              Expanded(
-                  child: GestureDetector(
-                onTap: (() => {
-                      setState(() {
-                        myController.text = myController.text
-                            .substring(0, myController.text.length - 1);
-                      })
-                    }),
-                child: Container(
-                  color: Color.fromARGB(255, 31, 185, 185),
-                  height: 100,
-                  child: const Center(
-                    child: const Text(
-                      "DEL",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                      ),
+              ),
+            )),
+            Expanded(
+                child: GestureDetector(
+              onTap: (() => {
+                    setState(() {
+                      myController.text = myController.text
+                          .substring(0, myController.text.length - 1);
+                    })
+                  }),
+              child: Container(
+                margin:
+                    EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Color.fromARGB(255, 233, 153, 173)),
+                height: 40,
+                child: const Center(
+                  child: const Text(
+                    "DEL",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              )),
-            ],
-          ),
-          Expanded(
-            flex: 3,
-            child: Container(
-              child: GridView.builder(
-                  itemCount: botones.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4),
-                  itemBuilder: (BuildContext context, int index) {
-                    return Boton(
+              ),
+            )),
+          ],
+        ),
+        Expanded(
+          flex: 2,
+          child: Container(
+            child: GridView.builder(
+                itemCount: botones.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4, childAspectRatio: 1.4),
+                itemBuilder: (BuildContext context, int index) {
+                  return Boton(
                       presionado: () {
                         setState(() {
-                          //TODO funciones
                           String valor = myController.text;
                           if (valor.isEmpty) {
                             myController.text = botones[index];
                           } else {
-                            if (botones[index] != "=") {
-                              myController.text = valor + botones[index];
+                            if (botones[index] == "." &&
+                                puntoExistente(myController.text)) {
+                              mensaje('No se pueden agregar 2 puntos');
+                            } else if (validarAnterior(
+                                valor[valor.length - 1], botones[index])) {
+                              if (myController.text == "Infinity") {
+                                myController.text = botones[index];
+                                anterior = "";
+                              } else if (botones[index] != "=") {
+                                myController.text = valor + botones[index];
+                              } else {
+                                calcular(botones[index]);
+                              }
                             }
                           }
-                          calcular(botones[index]);
                         });
                       },
                       buttonText: botones[index],
-                      color: Colors.green,
-                      textColor: Colors.white,
-                    );
-                  }),
-            ),
+                      color: esOperador(botones[index])
+                          ? Color.fromARGB(255, 98, 192, 204)
+                          : Colors.white,
+                      textColor: esOperador(botones[index])
+                          ? Colors.white
+                          : Colors.grey);
+                }),
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 
   void calcular(String dato) {
-    if (dato == "=") {
-      String cadena = myController.text;
-      if (validar(cadena)) {
-        String mult = operacion("*", cadena);
-        String div = operacion("/", mult);
-        String sum = operacion("+", div);
-        String res = operacion("-", sum);
-        print("Resultado final: ${res}");
-        anterior = myController.text;
-        myController.text = res;
-      }
+    String cadena = myController.text;
+    if (validar(cadena)) {
+      String mult = operacion("*", cadena);
+      String div = operacion("/", mult);
+      String sum = operacion("+", div);
+      String res = operacion("-", sum);
+      print("Resultado final: ${res}");
+      anterior = myController.text;
+      myController.text = res;
     }
   }
 
@@ -192,15 +213,16 @@ class _CalculadoraState extends State<Calculadora> {
       mensaje("Revise la ecuación, no puede iniciar con un operador * o /");
     } else if (cadena.isEmpty) {
       flag = false;
-    } else if (combinacionesConsecutivas(cadena)) {
+    }
+    /*else if (combinacionesConsecutivas(cadena)) {
       flag = false;
       mensaje("Revise la ecuación");
-    }
+    }*/
     return flag;
   }
 
-  bool combinacionesConsecutivas(String cadena) {
-    bool flag = false;
+  bool validarAnterior(String anteriorValor, String nuevoValor) {
+    bool flag = true;
     List<String> posibilidades = [
       "-*",
       "+*",
@@ -223,8 +245,8 @@ class _CalculadoraState extends State<Calculadora> {
       "/+"
     ];
     for (int i = 0; i < posibilidades.length; i++) {
-      if (cadena.contains(posibilidades[i])) {
-        flag = true;
+      if ((anteriorValor + nuevoValor) == posibilidades[i]) {
+        flag = false;
         break;
       }
     }
@@ -298,6 +320,18 @@ class _CalculadoraState extends State<Calculadora> {
     return res;
   }
 
+  bool puntoExistente(String cadena) {
+    bool flag = false;
+    for (int it = cadena.length - 1; it >= 0; it--) {
+      if (cadena[it] == ".") {
+        flag = true;
+      } else if (esOperador(cadena[it])) {
+        break;
+      }
+    }
+    return flag;
+  }
+
   double encontrarValorDer(int pos, String cadena) {
     double res = 0;
     String aux = '';
@@ -328,7 +362,7 @@ class _CalculadoraState extends State<Calculadora> {
 
 bool esOperador(String dato) {
   bool flag = false;
-  if (dato == "+" || dato == "-" || dato == "*" || dato == "/") {
+  if (dato == "+" || dato == "-" || dato == "*" || dato == "/" || dato == "=") {
     flag = true;
   }
   return flag;
