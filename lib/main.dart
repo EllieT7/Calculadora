@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:calculadora/botones.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
   runApp(const MyApp());
@@ -79,27 +80,55 @@ class _CalculadoraState extends State<Calculadora> {
                   ]),
             ),
           ),
-          GestureDetector(
-            onTap: (() => {
-                  setState(() {
-                    myController.text = "";
-                    anterior = "";
-                  })
-                }),
-            child: Container(
-              color: Colors.amber,
-              height: 100,
-              child: const Center(
-                child: const Text(
-                  "C",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
+          Row(
+            children: [
+              Expanded(
+                  child: GestureDetector(
+                onTap: (() => {
+                      setState(() {
+                        myController.text = "";
+                        anterior = "";
+                      })
+                    }),
+                child: Container(
+                  color: Colors.amber,
+                  height: 100,
+                  child: const Center(
+                    child: const Text(
+                      "C",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              )),
+              Expanded(
+                  child: GestureDetector(
+                onTap: (() => {
+                      setState(() {
+                        myController.text = myController.text
+                            .substring(0, myController.text.length - 1);
+                      })
+                    }),
+                child: Container(
+                  color: Color.fromARGB(255, 31, 185, 185),
+                  height: 100,
+                  child: const Center(
+                    child: const Text(
+                      "DEL",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              )),
+            ],
           ),
           Expanded(
             flex: 3,
@@ -114,7 +143,7 @@ class _CalculadoraState extends State<Calculadora> {
                         setState(() {
                           //TODO funciones
                           String valor = myController.text;
-                          if (valor.length == 0) {
+                          if (valor.isEmpty) {
                             myController.text = botones[index];
                           } else {
                             if (botones[index] != "=") {
@@ -139,14 +168,67 @@ class _CalculadoraState extends State<Calculadora> {
   void calcular(String dato) {
     if (dato == "=") {
       String cadena = myController.text;
-      String mult = operacion("*", cadena);
-      String div = operacion("/", mult);
-      String sum = operacion("+", div);
-      String res = operacion("-", sum);
-      print("Resultado final: ${res}");
-      anterior = myController.text;
-      myController.text = res;
+      if (validar(cadena)) {
+        String mult = operacion("*", cadena);
+        String div = operacion("/", mult);
+        String sum = operacion("+", div);
+        String res = operacion("-", sum);
+        print("Resultado final: ${res}");
+        anterior = myController.text;
+        myController.text = res;
+      }
     }
+  }
+
+  bool validar(String cadena) {
+    bool flag = true;
+    //Ultimo valor --- no x / + - o .
+    if (esOperador(cadena[cadena.length - 1]) ||
+        cadena[cadena.length - 1] == ".") {
+      flag = false;
+      mensaje("Revise la ecuación, debe finalizar con un número");
+    } else if (cadena[0] == "/" || cadena[0] == "*") {
+      flag = false;
+      mensaje("Revise la ecuación, no puede iniciar con un operador * o /");
+    } else if (cadena.isEmpty) {
+      flag = false;
+    } else if (combinacionesConsecutivas(cadena)) {
+      flag = false;
+      mensaje("Revise la ecuación");
+    }
+    return flag;
+  }
+
+  bool combinacionesConsecutivas(String cadena) {
+    bool flag = false;
+    List<String> posibilidades = [
+      "-*",
+      "+*",
+      "-/",
+      "+/",
+      "..",
+      "+.",
+      "-.",
+      "/.",
+      "*.",
+      ".+",
+      ".-",
+      "./",
+      ".*",
+      "**",
+      "//",
+      "++",
+      "-+",
+      "*+",
+      "/+"
+    ];
+    for (int i = 0; i < posibilidades.length; i++) {
+      if (cadena.contains(posibilidades[i])) {
+        flag = true;
+        break;
+      }
+    }
+    return flag;
   }
 
   String operacion(String signo, String cadena) {
@@ -243,3 +325,13 @@ class _CalculadoraState extends State<Calculadora> {
     return res;
   }
 }
+
+bool esOperador(String dato) {
+  bool flag = false;
+  if (dato == "+" || dato == "-" || dato == "*" || dato == "/") {
+    flag = true;
+  }
+  return flag;
+}
+
+void mensaje(String msg) => Fluttertoast.showToast(msg: msg);
