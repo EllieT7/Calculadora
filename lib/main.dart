@@ -162,13 +162,16 @@ class _CalculadoraState extends State<Calculadora> {
                               mensaje('No se pueden agregar 2 puntos');
                             } else if (validarAnterior(
                                 valor[valor.length - 1], botones[index])) {
-                              if (myController.text == "Infinity") {
-                                myController.text = botones[index];
-                                anterior = "";
-                              } else if (botones[index] != "=") {
-                                myController.text = valor + botones[index];
-                              } else {
-                                calcular(botones[index]);
+                              if (!signosConsecutivos(
+                                  myController.text, botones[index])) {
+                                if (myController.text == "Infinity") {
+                                  myController.text = botones[index];
+                                  anterior = "";
+                                } else if (botones[index] != "=") {
+                                  myController.text = valor + botones[index];
+                                } else {
+                                  calcular(botones[index]);
+                                }
                               }
                             }
                           }
@@ -188,6 +191,18 @@ class _CalculadoraState extends State<Calculadora> {
     );
   }
 
+  bool signosConsecutivos(String cadena, String ingresar) {
+    bool flag = false;
+    if (cadena.length > 2) {
+      if (esOperador(cadena[cadena.length - 1]) &&
+          esOperador(cadena[cadena.length - 2]) &&
+          esOperador(ingresar)) {
+        flag = true;
+      }
+    }
+    return flag;
+  }
+
   void calcular(String dato) {
     String cadena = myController.text;
     if (validar(cadena)) {
@@ -197,7 +212,11 @@ class _CalculadoraState extends State<Calculadora> {
       String res = operacion("-", sum);
       print("Resultado final: ${res}");
       anterior = myController.text;
-      myController.text = res;
+      if (res[0] == "+") {
+        myController.text = res.substring(1, res.length);
+      } else {
+        myController.text = res;
+      }
     }
   }
 
@@ -277,10 +296,19 @@ class _CalculadoraState extends State<Calculadora> {
             break;
         }
 
+        String combinacion = "${v1}$signo${v2}";
+        if (!cadena.contains(combinacion)) {
+          if (cadena.contains("${v1}.0$signo${v2}")) {
+            combinacion = "${v1}.0$signo${v2}";
+          } else {
+            combinacion = "${v1}$signo${v2}.0";
+          }
+        }
+
         if (v1 < 0 && resultadoParcial >= 0) {
-          cadena = cadena.replaceAll("${v1}$signo${v2}", "+$resultadoParcial");
+          cadena = cadena.replaceAll(combinacion, "+$resultadoParcial");
         } else {
-          cadena = cadena.replaceAll("${v1}$signo${v2}", "$resultadoParcial");
+          cadena = cadena.replaceAll(combinacion, "$resultadoParcial");
         }
         print("parcial: ${resultadoParcial}");
 
