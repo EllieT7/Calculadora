@@ -87,7 +87,9 @@ class _CalculadoraState extends State<Calculadora> {
                           if (valor.length == 0) {
                             myController.text = botones[index];
                           } else {
-                            myController.text = valor + botones[index];
+                            if (botones[index] != "=") {
+                              myController.text = valor + botones[index];
+                            }
                           }
                           calcular(botones[index]);
                         });
@@ -107,21 +109,90 @@ class _CalculadoraState extends State<Calculadora> {
   void calcular(String dato) {
     if (dato == "=") {
       String cadena = myController.text;
-      for (int i = 0; i < cadena.length; i++) {
-        //print(cadena[i] + "\n");
-        if (cadena[i] == "+" ||
-            cadena[i] == "-" ||
-            cadena[i] == "*" ||
-            cadena[i] == "/") {
-          double primerDato = 0;
-          String aux = "";
-          for (int j = 0; j < i; j++) {
-            aux += cadena[j];
-          }
-          primerDato = double.parse(aux);
-          print(primerDato);
+      String mult = operacion("*", cadena);
+      String div = operacion("/", mult);
+      String sum = operacion("+", div);
+      String res = operacion("-", sum);
+      print("Resultado final: ${res}");
+    }
+  }
+
+  String operacion(String signo, String cadena) {
+    String res = "";
+    double resultadoParcial = 0;
+    for (int k = 0; k < cadena.length; k++) {
+      if (cadena[k] == signo) {
+        double v1 = encontrarValorIzq(k, cadena);
+        double v2 = encontrarValorDer(k, cadena);
+        print(v1);
+        print(v2);
+        switch (signo) {
+          case "+":
+            resultadoParcial = v1 + v2;
+            break;
+          case "-":
+            resultadoParcial = v1 - v2;
+            break;
+          case "*":
+            resultadoParcial = v1 * v2;
+            break;
+          case "/":
+            resultadoParcial = v1 / v2;
+            break;
+        }
+        cadena = cadena.replaceAll("${v1}$signo${v2}", "$resultadoParcial");
+        //print(cadena);
+        k = 0;
+      }
+    }
+    res = cadena;
+    print("Resultado: ${res}");
+    return res;
+  }
+
+  double encontrarValorIzq(int pos, String cadena) {
+    double res = 0;
+    String aux = '';
+    int posAnterior = -1;
+    for (int l = 0; l < cadena.length; l++) {
+      if (l == pos) {
+        for (int m = posAnterior + 1; m < l; m++) {
+          aux += cadena[m];
+        }
+        break;
+      } else {
+        if (cadena[l] == "+" ||
+            cadena[l] == "-" ||
+            cadena[l] == "*" ||
+            cadena[l] == "/") {
+          posAnterior = l;
         }
       }
     }
+    res = double.parse(aux);
+    return res;
+  }
+
+  double encontrarValorDer(int pos, String cadena) {
+    double res = 0;
+    String aux = '';
+    for (int l1 = 0; l1 < cadena.length; l1++) {
+      if (l1 == pos) {
+        for (int m1 = pos + 1; m1 < cadena.length; m1++) {
+          if (cadena[m1] == "+" ||
+              cadena[m1] == "-" ||
+              cadena[m1] == "*" ||
+              cadena[m1] == "/" ||
+              cadena[m1] == "=") {
+            break;
+          } else {
+            aux += cadena[m1];
+          }
+        }
+        break;
+      }
+    }
+    res = double.parse(aux);
+    return res;
   }
 }
