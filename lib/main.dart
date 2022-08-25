@@ -9,9 +9,9 @@ class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Flutter Demo',
-      home: Calculadora(),
+      home: const Calculadora(),
     );
   }
 }
@@ -24,6 +24,7 @@ class Calculadora extends StatefulWidget {
 }
 
 class _CalculadoraState extends State<Calculadora> {
+  String anterior = "";
   final myController = TextEditingController();
   final List<String> botones = [
     '1',
@@ -48,27 +49,56 @@ class _CalculadoraState extends State<Calculadora> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.amber,
-        title: Text('Calculadora'),
+        title: const Text('Calculadora'),
       ),
       body: Column(
         children: <Widget>[
+          Text("$anterior"),
           Expanded(
             child: Container(
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     Container(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       alignment: Alignment.centerRight,
-                      child: TextField(
-                        controller: myController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          enabled: false,
+                      child: SizedBox(
+                        height: 100,
+                        child: TextField(
+                          style: TextStyle(fontSize: 40.0, color: Colors.black),
+                          controller: myController,
+                          decoration: const InputDecoration(
+                            contentPadding:
+                                EdgeInsets.symmetric(vertical: 40.0),
+                            border: OutlineInputBorder(),
+                            enabled: false,
+                          ),
                         ),
                       ),
                     ),
                   ]),
+            ),
+          ),
+          GestureDetector(
+            onTap: (() => {
+                  setState(() {
+                    myController.text = "";
+                    anterior = "";
+                  })
+                }),
+            child: Container(
+              color: Colors.amber,
+              height: 100,
+              child: const Center(
+                child: const Text(
+                  "C",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ),
           Expanded(
@@ -76,7 +106,7 @@ class _CalculadoraState extends State<Calculadora> {
             child: Container(
               child: GridView.builder(
                   itemCount: botones.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 4),
                   itemBuilder: (BuildContext context, int index) {
                     return Boton(
@@ -114,6 +144,8 @@ class _CalculadoraState extends State<Calculadora> {
       String sum = operacion("+", div);
       String res = operacion("-", sum);
       print("Resultado final: ${res}");
+      anterior = myController.text;
+      myController.text = res;
     }
   }
 
@@ -121,7 +153,7 @@ class _CalculadoraState extends State<Calculadora> {
     String res = "";
     double resultadoParcial = 0;
     for (int k = 0; k < cadena.length; k++) {
-      if (cadena[k] == signo) {
+      if (cadena[k] == signo && k != 0) {
         double v1 = encontrarValorIzq(k, cadena);
         double v2 = encontrarValorDer(k, cadena);
         print(v1);
@@ -140,7 +172,14 @@ class _CalculadoraState extends State<Calculadora> {
             resultadoParcial = v1 / v2;
             break;
         }
-        cadena = cadena.replaceAll("${v1}$signo${v2}", "$resultadoParcial");
+
+        if (v1 < 0 && resultadoParcial >= 0) {
+          cadena = cadena.replaceAll("${v1}$signo${v2}", "+$resultadoParcial");
+        } else {
+          cadena = cadena.replaceAll("${v1}$signo${v2}", "$resultadoParcial");
+        }
+        print("parcial: ${resultadoParcial}");
+
         //print(cadena);
         k = 0;
       }
@@ -165,7 +204,11 @@ class _CalculadoraState extends State<Calculadora> {
             cadena[l] == "-" ||
             cadena[l] == "*" ||
             cadena[l] == "/") {
-          posAnterior = l;
+          if (cadena[l] == "-") {
+            posAnterior = l - 1;
+          } else {
+            posAnterior = l;
+          }
         }
       }
     }
@@ -182,9 +225,12 @@ class _CalculadoraState extends State<Calculadora> {
           if (cadena[m1] == "+" ||
               cadena[m1] == "-" ||
               cadena[m1] == "*" ||
-              cadena[m1] == "/" ||
-              cadena[m1] == "=") {
-            break;
+              cadena[m1] == "/") {
+            if (m1 != pos + 1) {
+              break;
+            } else {
+              aux += cadena[m1];
+            }
           } else {
             aux += cadena[m1];
           }
@@ -192,6 +238,7 @@ class _CalculadoraState extends State<Calculadora> {
         break;
       }
     }
+    print("auxDer: $aux");
     res = double.parse(aux);
     return res;
   }
