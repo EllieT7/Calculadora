@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class CalculadoraBl {
-  var valor = '';
-  var anterior = '0';
   var valorFinal = "";
   String onKeyPress(String keyIndex) {
-    if (valorFinal.isEmpty) {
-      valorFinal = keyIndex;
-    } else if (keyIndex == "DEL") {
+    if (keyIndex == "DEL") {
       valorFinal = valorFinal.substring(0, valorFinal.length - 1);
     } else if (keyIndex == "C") {
       valorFinal = '';
+    } else if (valorFinal.isEmpty) {
+      valorFinal = keyIndex;
     } else {
       if (keyIndex == "." && puntoExistente(valorFinal)) {
         mensaje('No se pueden agregar 2 puntos');
@@ -19,7 +17,6 @@ class CalculadoraBl {
         if (!signosConsecutivos(valorFinal, keyIndex)) {
           if (valorFinal == "Infinity") {
             valorFinal = keyIndex;
-            anterior = "";
           } else if (keyIndex != "=") {
             valorFinal = valorFinal + keyIndex;
           } else {
@@ -51,7 +48,6 @@ class CalculadoraBl {
       String sum = operacion("+", div);
       String res = operacion("-", sum);
       print("Resultado final: ${res}");
-      anterior = dato;
       if (res[0] == "+") {
         dato = res.substring(1, res.length);
       } else {
@@ -74,10 +70,6 @@ class CalculadoraBl {
     } else if (cadena.isEmpty) {
       flag = false;
     }
-    /*else if (combinacionesConsecutivas(cadena)) {
-      flag = false;
-      mensaje("Revise la ecuación");
-    }*/
     return flag;
   }
 
@@ -120,8 +112,6 @@ class CalculadoraBl {
       if (cadena[k] == signo && k != 0) {
         double v1 = encontrarValorIzq(k, cadena);
         double v2 = encontrarValorDer(k, cadena);
-        print(v1);
-        print(v2);
         switch (signo) {
           case "+":
             resultadoParcial = v1 + v2;
@@ -151,14 +141,12 @@ class CalculadoraBl {
         } else {
           cadena = cadena.replaceAll(combinacion, "$resultadoParcial");
         }
-        print("parcial: ${resultadoParcial}");
-
-        //print(cadena);
+        //print("parcial: ${resultadoParcial}");
         k = 0;
       }
     }
     res = cadena;
-    print("Resultado: ${res}");
+    //print("Resultado: ${res}");
     return res;
   }
 
@@ -223,7 +211,7 @@ class CalculadoraBl {
         break;
       }
     }
-    print("auxDer: $aux");
+    //print("auxDer: $aux");
     res = double.parse(aux);
     return res;
   }

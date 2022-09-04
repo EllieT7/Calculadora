@@ -29,7 +29,7 @@ class Calculadora extends StatefulWidget {
 
 class _CalculadoraState extends State<Calculadora> {
   String anterior = "";
-  final myController = TextEditingController();
+
   final List<String> botones = [
     '1',
     '2',
@@ -57,11 +57,6 @@ class _CalculadoraState extends State<Calculadora> {
         title: const Text('Calculadora'),
       ),
       body: Column(children: <Widget>[
-        Container(
-          alignment: Alignment.topRight,
-          child: _buildAnswerText(calculatorBloc),
-          margin: EdgeInsets.only(top: 30, right: 30),
-        ),
         Expanded(
           child: Container(
             child: Column(
@@ -70,20 +65,7 @@ class _CalculadoraState extends State<Calculadora> {
                   Container(
                     padding: const EdgeInsets.all(15),
                     alignment: Alignment.centerRight,
-                    child: SizedBox(
-                      child: TextField(
-                        textAlign: TextAlign.end,
-                        style: TextStyle(
-                          fontSize: 40.0,
-                          color: Color.fromARGB(255, 99, 99, 99),
-                        ),
-                        controller: myController,
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(vertical: 20.0),
-                          enabled: false,
-                        ),
-                      ),
-                    ),
+                    child: SizedBox(child: _buildController(calculatorBloc)),
                   ),
                 ]),
           ),
@@ -162,25 +144,27 @@ class _CalculadoraState extends State<Calculadora> {
     );
   }
 
-  Widget _buildAnswerText(CalculatorBloc bloc) {
+  Widget _buildController(CalculatorBloc bloc) {
     return StreamBuilder<String?>(
-      stream: bloc.calculatorStream,
-      builder: (context, snapshot) {
-        print("En StreamBuilder: ${snapshot.data}");
-        var anterior = "";
-        if (snapshot.data != null) {
-          anterior = snapshot.data.toString();
-        }
-        return Text(
-          // En letra grande para mostrar el resultado
-          anterior,
-          style: const TextStyle(
-              fontSize: 30,
-              color: Color.fromARGB(255, 80, 80, 80),
-              fontWeight: FontWeight.bold),
-        );
-      },
-    );
+        stream: bloc.calculatorStream,
+        builder: ((context, snapshot) {
+          final myController = TextEditingController();
+          if (snapshot.data != null) {
+            myController.text = snapshot.data.toString();
+          }
+          return TextField(
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontSize: 40.0,
+              color: Color.fromARGB(255, 99, 99, 99),
+            ),
+            controller: myController,
+            decoration: const InputDecoration(
+              contentPadding: EdgeInsets.symmetric(vertical: 20.0),
+              enabled: false,
+            ),
+          );
+        }));
   }
 
   bool esOperador(String dato) {
