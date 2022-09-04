@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:calculadora/botones.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:calculadora/widgets/botones.dart';
+import 'bloc/bloc_provider.dart';
+import 'bloc/calculadora_bloc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,10 +11,12 @@ class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Flutter Demo',
-      home: const Calculadora(),
-    );
+    return BlocProvider(
+        bloc: CalculatorBloc(),
+        child: MaterialApp(
+          title: 'Flutter Demo',
+          home: const Calculadora(),
+        ));
   }
 }
 
@@ -47,6 +50,7 @@ class _CalculadoraState extends State<Calculadora> {
   ];
   @override
   Widget build(BuildContext context) {
+    final calculatorBloc = BlocProvider.of<CalculatorBloc>(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color.fromARGB(255, 98, 192, 204),
@@ -55,7 +59,7 @@ class _CalculadoraState extends State<Calculadora> {
       body: Column(children: <Widget>[
         Container(
           alignment: Alignment.topRight,
-          child: Text("$anterior"),
+          child: _buildAnswerText(calculatorBloc),
           margin: EdgeInsets.only(top: 30, right: 30),
         ),
         Expanded(
@@ -88,12 +92,7 @@ class _CalculadoraState extends State<Calculadora> {
           children: [
             Expanded(
                 child: GestureDetector(
-              onTap: (() => {
-                    setState(() {
-                      myController.text = "";
-                      anterior = "";
-                    })
-                  }),
+              onTap: (() => {calculatorBloc.pressKeySink.add("C")}),
               child: Container(
                 margin:
                     EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
@@ -115,12 +114,7 @@ class _CalculadoraState extends State<Calculadora> {
             )),
             Expanded(
                 child: GestureDetector(
-              onTap: (() => {
-                    setState(() {
-                      myController.text = myController.text
-                          .substring(0, myController.text.length - 1);
-                    })
-                  }),
+              onTap: (() => {calculatorBloc.pressKeySink.add("DEL")}),
               child: Container(
                 margin:
                     EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
@@ -152,30 +146,7 @@ class _CalculadoraState extends State<Calculadora> {
                 itemBuilder: (BuildContext context, int index) {
                   return Boton(
                       presionado: () {
-                        setState(() {
-                          String valor = myController.text;
-                          if (valor.isEmpty) {
-                            myController.text = botones[index];
-                          } else {
-                            if (botones[index] == "." &&
-                                puntoExistente(myController.text)) {
-                              mensaje('No se pueden agregar 2 puntos');
-                            } else if (validarAnterior(
-                                valor[valor.length - 1], botones[index])) {
-                              if (!signosConsecutivos(
-                                  myController.text, botones[index])) {
-                                if (myController.text == "Infinity") {
-                                  myController.text = botones[index];
-                                  anterior = "";
-                                } else if (botones[index] != "=") {
-                                  myController.text = valor + botones[index];
-                                } else {
-                                  calcular(botones[index]);
-                                }
-                              }
-                            }
-                          }
-                        });
+                        calculatorBloc.pressKeySink.add(botones[index]);
                       },
                       buttonText: botones[index],
                       color: esOperador(botones[index])
@@ -191,209 +162,36 @@ class _CalculadoraState extends State<Calculadora> {
     );
   }
 
-  bool signosConsecutivos(String cadena, String ingresar) {
+  Widget _buildAnswerText(CalculatorBloc bloc) {
+    return StreamBuilder<String?>(
+      stream: bloc.calculatorStream,
+      builder: (context, snapshot) {
+        print("En StreamBuilder: ${snapshot.data}");
+        var anterior = "";
+        if (snapshot.data != null) {
+          anterior = snapshot.data.toString();
+        }
+        return Text(
+          // En letra grande para mostrar el resultado
+          anterior,
+          style: const TextStyle(
+              fontSize: 30,
+              color: Color.fromARGB(255, 80, 80, 80),
+              fontWeight: FontWeight.bold),
+        );
+      },
+    );
+  }
+
+  bool esOperador(String dato) {
     bool flag = false;
-    if (cadena.length > 2) {
-      if (esOperador(cadena[cadena.length - 1]) &&
-          esOperador(cadena[cadena.length - 2]) &&
-          esOperador(ingresar)) {
-        flag = true;
-      }
+    if (dato == "+" ||
+        dato == "-" ||
+        dato == "*" ||
+        dato == "/" ||
+        dato == "=") {
+      flag = true;
     }
     return flag;
-  }
-
-  void calcular(String dato) {
-    String cadena = myController.text;
-    if (validar(cadena)) {
-      String mult = operacion("*", cadena);
-      String div = operacion("/", mult);
-      String sum = operacion("+", div);
-      String res = operacion("-", sum);
-      print("Resultado final: ${res}");
-      anterior = myController.text;
-      if (res[0] == "+") {
-        myController.text = res.substring(1, res.length);
-      } else {
-        myController.text = res;
-      }
-    }
-  }
-
-  bool validar(String cadena) {
-    bool flag = true;
-    //Ultimo valor --- no x / + - o .
-    if (esOperador(cadena[cadena.length - 1]) ||
-        cadena[cadena.length - 1] == ".") {
-      flag = false;
-      mensaje("Revise la ecuación, debe finalizar con un número");
-    } else if (cadena[0] == "/" || cadena[0] == "*") {
-      flag = false;
-      mensaje("Revise la ecuación, no puede iniciar con un operador * o /");
-    } else if (cadena.isEmpty) {
-      flag = false;
-    }
-    /*else if (combinacionesConsecutivas(cadena)) {
-      flag = false;
-      mensaje("Revise la ecuación");
-    }*/
-    return flag;
-  }
-
-  bool validarAnterior(String anteriorValor, String nuevoValor) {
-    bool flag = true;
-    List<String> posibilidades = [
-      "-*",
-      "+*",
-      "-/",
-      "+/",
-      "..",
-      "+.",
-      "-.",
-      "/.",
-      "*.",
-      ".+",
-      ".-",
-      "./",
-      ".*",
-      "**",
-      "//",
-      "++",
-      "-+",
-      "*+",
-      "/+"
-    ];
-    for (int i = 0; i < posibilidades.length; i++) {
-      if ((anteriorValor + nuevoValor) == posibilidades[i]) {
-        flag = false;
-        break;
-      }
-    }
-    return flag;
-  }
-
-  String operacion(String signo, String cadena) {
-    String res = "";
-    double resultadoParcial = 0;
-    for (int k = 0; k < cadena.length; k++) {
-      if (cadena[k] == signo && k != 0) {
-        double v1 = encontrarValorIzq(k, cadena);
-        double v2 = encontrarValorDer(k, cadena);
-        print(v1);
-        print(v2);
-        switch (signo) {
-          case "+":
-            resultadoParcial = v1 + v2;
-            break;
-          case "-":
-            resultadoParcial = v1 - v2;
-            break;
-          case "*":
-            resultadoParcial = v1 * v2;
-            break;
-          case "/":
-            resultadoParcial = v1 / v2;
-            break;
-        }
-
-        String combinacion = "${v1}$signo${v2}";
-        if (!cadena.contains(combinacion)) {
-          if (cadena.contains("${v1}.0$signo${v2}")) {
-            combinacion = "${v1}.0$signo${v2}";
-          } else {
-            combinacion = "${v1}$signo${v2}.0";
-          }
-        }
-
-        if (v1 < 0 && resultadoParcial >= 0) {
-          cadena = cadena.replaceAll(combinacion, "+$resultadoParcial");
-        } else {
-          cadena = cadena.replaceAll(combinacion, "$resultadoParcial");
-        }
-        print("parcial: ${resultadoParcial}");
-
-        //print(cadena);
-        k = 0;
-      }
-    }
-    res = cadena;
-    print("Resultado: ${res}");
-    return res;
-  }
-
-  double encontrarValorIzq(int pos, String cadena) {
-    double res = 0;
-    String aux = '';
-    int posAnterior = -1;
-    for (int l = 0; l < cadena.length; l++) {
-      if (l == pos) {
-        for (int m = posAnterior + 1; m < l; m++) {
-          aux += cadena[m];
-        }
-        break;
-      } else {
-        if (cadena[l] == "+" ||
-            cadena[l] == "-" ||
-            cadena[l] == "*" ||
-            cadena[l] == "/") {
-          if (cadena[l] == "-") {
-            posAnterior = l - 1;
-          } else {
-            posAnterior = l;
-          }
-        }
-      }
-    }
-    res = double.parse(aux);
-    return res;
-  }
-
-  bool puntoExistente(String cadena) {
-    bool flag = false;
-    for (int it = cadena.length - 1; it >= 0; it--) {
-      if (cadena[it] == ".") {
-        flag = true;
-      } else if (esOperador(cadena[it])) {
-        break;
-      }
-    }
-    return flag;
-  }
-
-  double encontrarValorDer(int pos, String cadena) {
-    double res = 0;
-    String aux = '';
-    for (int l1 = 0; l1 < cadena.length; l1++) {
-      if (l1 == pos) {
-        for (int m1 = pos + 1; m1 < cadena.length; m1++) {
-          if (cadena[m1] == "+" ||
-              cadena[m1] == "-" ||
-              cadena[m1] == "*" ||
-              cadena[m1] == "/") {
-            if (m1 != pos + 1) {
-              break;
-            } else {
-              aux += cadena[m1];
-            }
-          } else {
-            aux += cadena[m1];
-          }
-        }
-        break;
-      }
-    }
-    print("auxDer: $aux");
-    res = double.parse(aux);
-    return res;
   }
 }
-
-bool esOperador(String dato) {
-  bool flag = false;
-  if (dato == "+" || dato == "-" || dato == "*" || dato == "/" || dato == "=") {
-    flag = true;
-  }
-  return flag;
-}
-
-void mensaje(String msg) => Fluttertoast.showToast(msg: msg);
